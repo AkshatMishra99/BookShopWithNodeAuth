@@ -2,18 +2,35 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 
 exports.getLogin = (req, res, next) => {
-	res.render("auth/login", {
-		path: "/login",
-		pageTitle: "Login",
-		isAuthenticated: false
-	});
+	if (req.session.isLoggedIn) {
+		return res.redirect("/");
+	} else {
+		let message = req.flash("error");
+		if (message && message.length > 0) {
+			message = message[0];
+		}
+		res.render("auth/login", {
+			path: "/login",
+			pageTitle: "Login",
+			isAuthenticated: false,
+			errorMessage: message
+		});
+	}
 };
 
 exports.getSignup = (req, res, next) => {
+	if (req.session.isLoggedIn) {
+		return res.redirect("/");
+	}
+	let message = req.flash("error");
+	if (message && message.length > 0) {
+		message = message[0];
+	}
 	res.render("auth/signup", {
 		path: "/signup",
 		pageTitle: "Signup",
-		isAuthenticated: false
+		isAuthenticated: false,
+		errorMessage: message
 	});
 };
 
@@ -33,6 +50,7 @@ exports.postLogin = (req, res, next) => {
 								return res.redirect("/");
 							});
 						} else {
+							req.flash("error", "Incorrect Password!!");
 							return res.redirect("/login");
 						}
 					})
@@ -42,6 +60,7 @@ exports.postLogin = (req, res, next) => {
 					});
 			} else {
 				console.log("User login failed!!");
+				req.flash("error", "Invalid Email!!");
 				return res.redirect("/login");
 			}
 		})
@@ -53,14 +72,15 @@ exports.postSignup = (req, res, next) => {
 	console.log(email, password);
 	if (!email || !password || !name) {
 		console.log("Incomplete details!!");
-		return res.redirect("/");
+		req.flash("error", "Incomplete details!!");
+		return res.redirect("/signup");
 	}
 	return User.findOne({ email: email })
 		.then((user) => {
 			if (user) {
 				console.log("User with the email already exists!");
-				res.redirect("/");
-				return null;
+				req.flash("error", "User with the email already exists!");
+				return res.redirect("/signup");
 			} else {
 				const newUser = new User({
 					email,
