@@ -1,15 +1,33 @@
 const Product = require("../models/product");
-
+const { validationResult } = require("express-validator");
 exports.getAddProduct = (req, res, next) => {
 	res.render("admin/edit-product", {
 		pageTitle: "Add Product",
 		path: "/admin/add-product",
 		editing: false,
-		isAuthenticated: req.session.isLoggedIn
+		isAuthenticated: req.session.isLoggedIn,
+		errorMessage: undefined,
+		validationErrors: [],
+		userInput: undefined,
+		hasError: false
 	});
 };
 
 exports.postAddProduct = (req, res, next) => {
+	const errors = validationResult(req).array();
+	if (errors.length > 0) {
+		const message = errors[0].msg;
+		return res.status(422).render("admin/edit-product", {
+			pageTitle: "Add Product",
+			path: "/admin/add-product",
+			editing: false,
+			isAuthenticated: req.session.isLoggedIn,
+			errorMessage: message,
+			validationErrors: errors,
+			hasError: true,
+			product: { ...req.body }
+		});
+	}
 	const title = req.body.title;
 	const imageUrl = req.body.imageUrl;
 	const price = req.body.price;
@@ -49,13 +67,30 @@ exports.getEditProduct = (req, res, next) => {
 				path: "/admin/edit-product",
 				editing: editMode,
 				product: product,
-				isAuthenticated: req.session.isLoggedIn
+				errorMessage: undefined,
+				validationErrors: [],
+				userInput: undefined,
+				hasError: false
 			});
 		})
 		.catch((err) => console.log(err));
 };
 
 exports.postEditProduct = (req, res, next) => {
+	const errors = validationResult(req).array();
+	if (errors.length > 0) {
+		const message = errors[0].msg;
+		return res.status(422).render("admin/edit-product", {
+			pageTitle: "Edit Product",
+			path: "/admin/edit-product",
+			editing: true,
+			isAuthenticated: req.session.isLoggedIn,
+			errorMessage: message,
+			validationErrors: errors,
+			product: { ...req.body },
+			hasError: true
+		});
+	}
 	const prodId = req.body.productId;
 	const updatedTitle = req.body.title;
 	const updatedPrice = req.body.price;
