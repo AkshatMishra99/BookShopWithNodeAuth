@@ -30,7 +30,7 @@ exports.getLogin = (req, res, next) => {
 			isAuthenticated: false,
 			errorMessage: message,
 			userInput: null,
-			validationErrors: errors
+			validationErrors: []
 		});
 	}
 };
