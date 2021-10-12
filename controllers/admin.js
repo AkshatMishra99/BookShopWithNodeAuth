@@ -87,7 +87,7 @@ exports.postEditProduct = (req, res, next) => {
 			isAuthenticated: req.session.isLoggedIn,
 			errorMessage: message,
 			validationErrors: errors,
-			product: { ...req.body },
+			product: { ...req.body, _id: req.body.productId },
 			hasError: true
 		});
 	}

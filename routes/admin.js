@@ -4,6 +4,7 @@ const express = require("express");
 const { body } = require("express-validator");
 const adminController = require("../controllers/admin");
 const isAuth = require("../middleware/is-auth");
+const { isString } = require("util");
 
 const router = express.Router();
 
@@ -17,7 +18,10 @@ router.get("/products", isAuth, adminController.getProducts);
 router.post(
 	"/add-product",
 	isAuth,
-	body("title", "Enter valid title!!").trim().isLength({ min: 1, max: 400 }),
+	body("title", "Enter valid title!!")
+		.isString()
+		.trim()
+		.isLength({ min: 1, max: 400 }),
 	body("imageUrl", "Enter valid image url!!")
 		.isURL()
 		.trim()
@@ -34,7 +38,10 @@ router.get("/edit-product/:productId", isAuth, adminController.getEditProduct);
 router.post(
 	"/edit-product",
 	isAuth,
-	body("title", "Enter valid title!!").trim().isLength({ min: 1, max: 400 }),
+	body("title", "Enter valid title!!")
+		.isString()
+		.trim()
+		.isLength({ min: 1, max: 400 }),
 	body("imageUrl", "Enter valid image url!!")
 		.isURL()
 		.trim()
