@@ -3,6 +3,8 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const sendGridTransport = require("nodemailer-sendgrid-transport");
 
+const { validationResult } = require("express-validator");
+
 const transporter = nodemailer.createTransport(
 	sendGridTransport({
 		auth: {
@@ -26,7 +28,8 @@ exports.getLogin = (req, res, next) => {
 			path: "/login",
 			pageTitle: "Login",
 			isAuthenticated: false,
-			errorMessage: message
+			errorMessage: message,
+			userInput: null
 		});
 	}
 };
@@ -42,12 +45,25 @@ exports.getSignup = (req, res, next) => {
 	res.render("auth/signup", {
 		path: "/signup",
 		pageTitle: "Signup",
-		errorMessage: message
+		errorMessage: message,
+		userInput: null
 	});
 };
 
 exports.postLogin = (req, res, next) => {
 	const { email, password } = req.body;
+	const errors = validationResult(req).array();
+	console.log("errors	======>", errors.length, errors);
+	if (errors.length > 0) {
+		console.log(errors.join("\n"));
+		const message = `${errors[0].msg}`;
+		return res.status(422).render("auth/login", {
+			path: "/login",
+			pageTitle: "Login",
+			errorMessage: message,
+			userInput: { ...req.body }
+		});
+	}
 	return User.findOne({ email: email })
 		.then((user) => {
 			if (user) {
@@ -81,47 +97,41 @@ exports.postLogin = (req, res, next) => {
 
 exports.postSignup = (req, res, next) => {
 	const { email, name, password, confirmPassword } = req.body;
-	console.log(email, password);
-	if (!email || !password || !name) {
-		console.log("Incomplete details!!");
-		req.flash("error", "Incomplete details!!");
-		return res.redirect("/signup");
+	const errors = validationResult(req).array();
+	console.log("errors	======>", errors.length, errors);
+	if (errors.length > 0) {
+		console.log(errors.join("\n"));
+		const message = `${errors[0].msg}`;
+		return res.status(422).render("auth/signup", {
+			path: "/signup",
+			pageTitle: "Signup",
+			errorMessage: message,
+			userInput: { ...req.body }
+		});
 	}
-	return User.findOne({ email: email })
-		.then((user) => {
-			if (user) {
-				console.log("User with the email already exists!");
-				req.flash("error", "User with the email already exists!");
-				return res.redirect("/signup");
-			} else {
-				const newUser = new User({
-					email,
-					name,
-					password,
-					cart: { items: [] }
-				});
-				return newUser
-					.save()
-					.then((result) => {
-						console.log(result);
-						return transporter.sendMail({
-							to: email,
-							from: "mailakshat99@gmail.com",
-							subject: "Signup Succeeded!!",
-							html: `<body>
+	const newUser = new User({
+		email,
+		name,
+		password,
+		cart: { items: [] }
+	});
+	return newUser
+		.save()
+		.then((result) => {
+			console.log(result);
+			return transporter.sendMail({
+				to: email,
+				from: "mailakshat99@gmail.com",
+				subject: "Signup Succeeded!!",
+				html: `<body>
 										<h1>Signup completed successfully!!</h1>
 										<h2>Your username is: ${email}</h2>
 										<h2>Your password is: ${password}</h2>
 									</body>`
-						});
-					})
-					.then(() => {
-						return res.redirect("/login");
-					})
-					.catch((err) => {
-						console.log(err);
-					});
-			}
+			});
+		})
+		.then(() => {
+			return res.redirect("/login");
 		})
 		.catch((err) => {
 			console.log(err);

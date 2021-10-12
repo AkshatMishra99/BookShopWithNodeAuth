@@ -13,19 +13,35 @@
         <form class="login-form" action="/signup" method="POST">
             <div class="form-control">
                 <label for="email">E-Mail</label>
-                <input type="email" name="email" id="email">
+                <% if(userInput){ %> 
+                <input type="email" name="email" id="email" value="<%= userInput.email %>" />
+                <% }else{ %> 
+                <input type="email" name="email" id="email" />
+                <% } %> 
             </div>
             <div class="form-control">
                 <label for="name">Name</label>
-                <input type="name" name="name" id="name">
+                <% if(userInput){ %> 
+                <input type="name" name="name" id="name" value="<%= userInput.name %>">
+                <% }else{ %> 
+                <input type="name" name="name" id="name" >
+                <% } %> 
             </div>
             <div class="form-control">
                 <label for="password">Password</label>
+                <% if(userInput){ %> 
+                <input type="password" name="password" id="password" value="<%= userInput.password %>" >
+                <% }else{ %> 
                 <input type="password" name="password" id="password">
+                <% } %> 
             </div>
             <div class="form-control">
                 <label for="confirmPassword">Confirm Password</label>
+                <% if(userInput){ %> 
+                <input type="password" name="confirmPassword" id="confirmPassword" value="<%= userInput.confirmPassword %>">
+                <% }else{ %> 
                 <input type="password" name="confirmPassword" id="confirmPassword">
+                <% } %> 
             </div>
             <input type="hidden" name="_csrf" value=<%= csrfToken %> />
             <button class="btn" type="submit">Sign Up</button>
