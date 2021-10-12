@@ -14,7 +14,12 @@
             <div class="form-control">
                 <label for="email">E-Mail</label>
                 <% if(userInput){ %> 
-                <input type="email" name="email" id="email" value="<%= userInput.email %>" />
+                <input 
+                    class="<%= validationErrors.find(e=>e.param==='email')? 'invalid':''  %> "
+                    type="email" 
+                    name="email" 
+                    id="email" 
+                    value="<%= userInput.email %>" />
                 <% }else{ %> 
                 <input type="email" name="email" id="email" />
                 <% } %>
@@ -22,7 +27,12 @@
             <div class="form-control">
                 <label for="password">Password</label>
                <% if(userInput){ %> 
-                <input type="password" name="password" id="password" value="<%= userInput.password %>" >
+                <input
+                    class="<%= validationErrors.find(e=>e.param==='password')? 'invalid':''  %> " 
+                    type="password" 
+                    name="password" 
+                    id="password" 
+                    value="<%= userInput.password %>" >
                 <% }else{ %> 
                 <input type="password" name="password" id="password">
                 <% } %> 

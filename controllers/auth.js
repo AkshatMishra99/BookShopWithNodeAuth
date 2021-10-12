@@ -29,7 +29,8 @@ exports.getLogin = (req, res, next) => {
 			pageTitle: "Login",
 			isAuthenticated: false,
 			errorMessage: message,
-			userInput: null
+			userInput: null,
+			validationErrors: errors
 		});
 	}
 };
@@ -46,7 +47,8 @@ exports.getSignup = (req, res, next) => {
 		path: "/signup",
 		pageTitle: "Signup",
 		errorMessage: message,
-		userInput: null
+		userInput: null,
+		validationErrors: []
 	});
 };
 
@@ -61,7 +63,8 @@ exports.postLogin = (req, res, next) => {
 			path: "/login",
 			pageTitle: "Login",
 			errorMessage: message,
-			userInput: { ...req.body }
+			userInput: { ...req.body },
+			validationErrors: errors
 		});
 	}
 	return User.findOne({ email: email })
@@ -106,7 +109,8 @@ exports.postSignup = (req, res, next) => {
 			path: "/signup",
 			pageTitle: "Signup",
 			errorMessage: message,
-			userInput: { ...req.body }
+			userInput: { ...req.body },
+			validationErrors: errors
 		});
 	}
 	const newUser = new User({
