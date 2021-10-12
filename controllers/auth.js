@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const sendGridTransport = require("nodemailer-sendgrid-transport");
@@ -11,6 +11,8 @@ const transporter = nodemailer.createTransport(
 		}
 	})
 );
+
+const User = require("../models/user");
 
 exports.getLogin = (req, res, next) => {
 	if (req.session.isLoggedIn) {
@@ -40,7 +42,6 @@ exports.getSignup = (req, res, next) => {
 	res.render("auth/signup", {
 		path: "/signup",
 		pageTitle: "Signup",
-		isAuthenticated: false,
 		errorMessage: message
 	});
 };
@@ -132,4 +133,139 @@ exports.postLogout = (req, res, next) => {
 		console.log(err);
 		res.redirect("/");
 	});
+};
+
+exports.getReset = (req, res, next) => {
+	let message = req.flash("error");
+	if (message && message.length > 0) {
+		message = message[0];
+	}
+	return res.render("auth/reset", {
+		path: "/reset",
+		pageTitle: "Reset Password",
+		errorMessage: message
+	});
+};
+
+exports.postReset = (req, res, next) => {
+	const { email } = req.body;
+	if (!email) {
+		req.flash("error", "Enter valid Email");
+		return res.redirect("/reset");
+	}
+	crypto.randomBytes(32, (err, buffer) => {
+		if (err) {
+			console.log("error", err);
+			req.flash("error", "Some error occured!!");
+			return res.redirect("/reset");
+		}
+		const token = buffer.toString("hex");
+		User.findOne({ email: email })
+			.then((user) => {
+				if (!user) {
+					console.log(err);
+					req.flash("error", "No account with that email address!!");
+					return res.redirect("/reset");
+				}
+				user.resetToken = token;
+				user.resetTokenExpiration = Date.now() + 3600000;
+				return user.save();
+			})
+			.then((result) => {
+				res.redirect("/");
+				transporter.sendMail({
+					to: email,
+					from: "mailakshat99@gmail.com",
+					subject: "Reset Password",
+					html: `
+						<p>You requested to reset your password</p>
+						<p>Click this <a href="http://localhost:3000/reset/${token}">link</a> to set a new password</p>
+					`
+				});
+			})
+			.catch((err) => {
+				console.log(err);
+				req.flash("error", "Some error occured!!");
+				return res.redirect("/reset");
+			});
+	});
+};
+
+exports.getNewPassword = (req, res, next) => {
+	const token = req.params.token;
+	return User.findOne({
+		resetToken: token,
+		resetTokenExpiration: { $gt: Date.now() }
+	})
+		.then((user) => {
+			if (!user) {
+				return res.redirect("/404");
+			}
+			let message = req.flash("error");
+			if (message && message.length > 0) {
+				message = message[0];
+			}
+			res.render("auth/new-password", {
+				path: "new-password",
+				pageTitle: "New Password",
+				errorMessage: message,
+				userId: user._id.toString(),
+				passwordToken: token
+			});
+		})
+		.catch((err) => {
+			console.log(err);
+			return res.redirect("/404");
+		});
+};
+
+exports.postNewPassword = (req, res, next) => {
+	const {
+		userId,
+		password: newPassword,
+		confirmPassword,
+		passwordToken
+	} = req.body;
+	if (!newPassword || !userId) {
+		req.flash("error", "Incomplete details!!");
+		return res.redirect("/reset/" + passwordToken);
+	}
+	if (newPassword !== confirmPassword) {
+		req.flash("error", "Both Passwords must match!!");
+		return res.redirect("/reset/" + passwordToken);
+	}
+	return User.findOne({
+		_id: userId,
+		resetToken: passwordToken,
+		resetTokenExpiration: { $gt: Date.now() }
+	})
+		.then((user) => {
+			if (!user) {
+				console.log("User not found!!");
+				return res.redirect("/404");
+			}
+			user.password = newPassword;
+			user.resetToken = undefined;
+			user.resetTokenExpiration = undefined;
+			return user
+				.save()
+				.then((result) => {
+					transporter.sendMail({
+						to: user.email,
+						from: "mailakshat99@gmail.com",
+						subject: "Password Updated Successfully!!",
+						html: `<h1>Password has been changed successfully!!</h1>
+								<h2>Your new password is ${newPassword}</h2>
+						`
+					});
+					return res.redirect("/login");
+				})
+				.catch((err) => {
+					console.log(err);
+				});
+		})
+		.catch((error) => {
+			console.log(error);
+			return res.redirect("/404");
+		});
 };
