@@ -1,5 +1,5 @@
 const Product = require("../models/product");
-
+const mongoose = require("mongoose");
 exports.getAddProduct = (req, res, next) => {
 	res.render("admin/edit-product", {
 		pageTitle: "Add Product",
@@ -29,7 +29,9 @@ exports.postAddProduct = (req, res, next) => {
 			res.redirect("/admin/products");
 		})
 		.catch((err) => {
-			console.log(err);
+			const error = new Error(err);
+			error.httpStatusCode = 500;
+			next(error);
 		});
 };
 
@@ -52,7 +54,11 @@ exports.getEditProduct = (req, res, next) => {
 				isAuthenticated: req.session.isLoggedIn
 			});
 		})
-		.catch((err) => console.log(err));
+		.catch((err) => {
+			const error = new Error(err);
+			error.httpStatusCode = 500;
+			next(error);
+		});
 };
 
 exports.postEditProduct = (req, res, next) => {
@@ -76,7 +82,11 @@ exports.postEditProduct = (req, res, next) => {
 				res.redirect("/admin/products");
 			});
 		})
-		.catch((err) => console.log(err));
+		.catch((err) => {
+			const error = new Error(err);
+			error.httpStatusCode = 500;
+			next(error);
+		});
 };
 
 exports.getProducts = (req, res, next) => {
@@ -92,7 +102,11 @@ exports.getProducts = (req, res, next) => {
 				isAuthenticated: req.session.isLoggedIn
 			});
 		})
-		.catch((err) => console.log(err));
+		.catch((err) => {
+			const error = new Error(err);
+			error.httpStatusCode = 500;
+			next(error);
+		});
 };
 
 exports.postDeleteProduct = (req, res, next) => {
@@ -102,5 +116,9 @@ exports.postDeleteProduct = (req, res, next) => {
 			console.log("DESTROYED PRODUCT");
 			res.redirect("/admin/products");
 		})
-		.catch((err) => console.log(err));
+		.catch((err) => {
+			const error = new Error(err);
+			error.httpStatusCode = 500;
+			next(error);
+		});
 };
