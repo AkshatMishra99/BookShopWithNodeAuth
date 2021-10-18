@@ -30,9 +30,10 @@ exports.postAddProduct = (req, res, next) => {
 		});
 	}
 	const title = req.body.title;
-	const imageUrl = req.body.image;
+	const imageUrl = req.file;
 	const price = req.body.price;
 	const description = req.body.description;
+	console.log(imageUrl, req.body);
 	const product = new Product({
 		title: title,
 		price: price,
@@ -50,6 +51,7 @@ exports.postAddProduct = (req, res, next) => {
 		.catch((err) => {
 			const error = new Error(err);
 			error.httpStatusCode = 500;
+			console.log(error, "here waas an error");
 			next(error);
 		});
 };
@@ -121,6 +123,7 @@ exports.postEditProduct = (req, res, next) => {
 		.catch((err) => {
 			const error = new Error(err);
 			error.httpStatusCode = 500;
+			console.log(error);
 			next(error);
 		});
 };
