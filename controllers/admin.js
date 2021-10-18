@@ -16,6 +16,11 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
 	const errors = validationResult(req).array();
+	const title = req.body.title;
+	const image = req.file;
+	const price = req.body.price;
+	const description = req.body.description;
+	console.log(image, req.body);
 	if (errors.length > 0) {
 		const message = errors[0].msg;
 		return res.status(422).render("admin/edit-product", {
@@ -29,11 +34,19 @@ exports.postAddProduct = (req, res, next) => {
 			product: { ...req.body }
 		});
 	}
-	const title = req.body.title;
-	const imageUrl = req.file;
-	const price = req.body.price;
-	const description = req.body.description;
-	console.log(imageUrl, req.body);
+	if (!image) {
+		return res.status(422).render("admin/edit-product", {
+			pageTitle: "Add Product",
+			path: "/admin/add-product",
+			editing: false,
+			isAuthenticated: req.session.isLoggedIn,
+			errorMessage: "Attached file is not an image!!",
+			validationErrors: [],
+			hasError: true,
+			product: { ...req.body }
+		});
+	}
+	const imageUrl = image.path;
 	const product = new Product({
 		title: title,
 		price: price,
@@ -103,9 +116,8 @@ exports.postEditProduct = (req, res, next) => {
 	const prodId = req.body.productId;
 	const updatedTitle = req.body.title;
 	const updatedPrice = req.body.price;
-	const updatedImageUrl = req.body.imageUrl;
+	const image = req.file;
 	const updatedDesc = req.body.description;
-
 	Product.findOne({ _id: prodId, userId: req.user._id })
 		.then((product) => {
 			if (!product) {
@@ -114,7 +126,9 @@ exports.postEditProduct = (req, res, next) => {
 			product.title = updatedTitle;
 			product.price = updatedPrice;
 			product.description = updatedDesc;
-			product.imageUrl = updatedImageUrl;
+			if (image) {
+				product.imageUrl = image.path;
+			}
 			return product.save().then((result) => {
 				console.log("UPDATED PRODUCT!");
 				res.redirect("/admin/products");
