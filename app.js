@@ -86,6 +86,7 @@ app.use(shopRoutes);
 app.use(authRoutes);
 
 app.use((error, req, res, next) => {
+	console.log("Error is here:", error);
 	return res.status(500).redirect("/500");
 });
 

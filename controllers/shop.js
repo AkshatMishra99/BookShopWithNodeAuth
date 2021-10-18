@@ -206,22 +206,18 @@ exports.getInvoice = (req, res, next) => {
 					console.log(prod.product.imageUrl);
 					totalPrice += +prod.product.price * +prod.quantity;
 					pdfDoc
-						.image(prod.product.imageUrl, {
-							width: 200,
-							height: 100
-						})
-						.moveDown(0.5)
 						.font("Courier-Bold")
 						.fontSize(18)
 						.text(
-							`Item:${prod.product.title}, Quantity:${prod.quantity}, Price: INR ${prod.product.price}`
+							`${prod.product.title} - ${prod.quantity} * $ ${prod.product.price}`
 						)
 						.moveDown(1.5);
 				});
+				pdfDoc.text("----------------------------------").moveDown(1.5);
 				pdfDoc
 					.font("Courier-Bold")
 					.fontSize(20)
-					.text(`Total Price - INR ${totalPrice}`);
+					.text(`Total Price - $ ${totalPrice}`);
 				pdfDoc.end();
 
 				/* Sending data as whole */
