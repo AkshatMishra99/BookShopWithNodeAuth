@@ -166,6 +166,64 @@ exports.getInvoice = (req, res, next) => {
 			if (order.user.userId.toString() === req.user._id.toString()) {
 				const invoiceName = "invoice-" + orderId + ".pdf";
 				const invoicePath = path.join("data", "invoices", invoiceName);
+
+				res.set("Content-Type", "application/pdf");
+				res.setHeader(
+					"Content-Disposition",
+					'inline; filename="' + invoiceName + '"'
+				);
+				const pdfDoc = new PDFDocument({ autoFirstPage: false });
+				pdfDoc.pipe(fs.createWriteStream(invoicePath));
+				pdfDoc.pipe(res);
+				pdfDoc.addPage({
+					margins: {
+						top: 50,
+						bottom: 50,
+						left: 30,
+						right: 30
+					}
+				});
+				pdfDoc
+					.font("Helvetica-Bold")
+					.fontSize(25)
+					.text("Invoice", {
+						underline: true,
+						margins: {
+							top: 20,
+							bottom: 20,
+							left: 20,
+							right: 20
+						}
+					});
+
+				pdfDoc
+					.text(
+						"------------------------------------------------------------------"
+					)
+					.moveDown(1.5);
+				let totalPrice = 0;
+				order.products.forEach((prod) => {
+					console.log(prod.product.imageUrl);
+					totalPrice += +prod.product.price * +prod.quantity;
+					pdfDoc
+						.image(prod.product.imageUrl, {
+							width: 200,
+							height: 100
+						})
+						.moveDown(0.5)
+						.font("Courier-Bold")
+						.fontSize(18)
+						.text(
+							`Item:${prod.product.title}, Quantity:${prod.quantity}, Price: INR ${prod.product.price}`
+						)
+						.moveDown(1.5);
+				});
+				pdfDoc
+					.font("Courier-Bold")
+					.fontSize(20)
+					.text(`Total Price - INR ${totalPrice}`);
+				pdfDoc.end();
+
 				/* Sending data as whole */
 				// fs.readFile(invoicePath, (err, data) => {
 				// 	if (err) return next(err);
@@ -178,13 +236,13 @@ exports.getInvoice = (req, res, next) => {
 				// });
 
 				/* Streaming data from the server */
-				const file = fs.createReadStream(invoicePath);
-				res.set("Content-Type", "application/pdf");
-				res.setHeader(
-					"Content-Disposition",
-					'inline; filename="' + invoiceName + '"'
-				);
-				file.pipe(res);
+				// const file = fs.createReadStream(invoicePath);
+				// res.set("Content-Type", "application/pdf");
+				// res.setHeader(
+				// 	"Content-Disposition",
+				// 	'inline; filename="' + invoiceName + '"'
+				// );
+				// file.pipe(res);
 			} else {
 				const error = new Error("Authentication failed");
 				console.log(error);
